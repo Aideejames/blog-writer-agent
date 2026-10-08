@@ -1,36 +1,50 @@
 # ✍️ Blog Writer Agent
 
-A multi-agent AI system that **researches, outlines, writes, and edits** a full blog post from a single topic input — built with **LangGraph**, **LangChain**, and **Google Gemini**, and deployed on **Streamlit Community Cloud**.
+![Blog Writer Agent](docs/screenshot.png)
 
-**🔗 Live demo:** https://blog-writer-agent-ky9myeyjsmjymbfcjowbe.streamlit.app
+A **multi-agent AI system** that researches, outlines, writes, and edits a full
+blog post from a single topic input. Built with **LangGraph**, **LangChain**,
+and **Google Gemini**.
 
-> 🔒 Password-protected demo — the API key is rate-limited.
+**🔗 Live demo:** https://aideejames.github.io/blog-writer-agent/  
+**🔗 API docs:** https://blog-writer-agent-api.onrender.com/docs
+
+> 🔒 Password-protected demo — contact me for access.  
+> ⏳ Backend runs on Render's free tier — the first request may take 30–60 seconds to wake up.
 
 ---
 
 ## What it does
 
-Enter a topic. The agent runs a four-stage pipeline and returns a polished blog post (~700–1000 words) in about 30–60 seconds.
+Enter a topic. Four agents run in sequence and return a polished blog post
+(~700–1000 words) in about 30–60 seconds.
 
-| Stage | Agent | What it does |
+| Stage | Agent | Role |
 |---|---|---|
-| 1 | **Researcher** | Produces concise research notes — key concepts, angles, misconceptions, hook |
-| 2 | **Outliner** | Builds a structured outline: title, thesis, 4–6 sections, bullets |
-| 3 | **Writer** | Writes the full blog post from the outline in a conversational tone |
-| 4 | **Editor** | Tightens prose, fixes grammar, improves transitions — without changing structure |
+| 1 | **Researcher** | Produces key concepts, angles, misconceptions, and a hook idea |
+| 2 | **Outliner** | Builds a structured outline with title, thesis, and 4–6 sections |
+| 3 | **Writer** | Writes the full blog post from the outline |
+| 4 | **Editor** | Polishes prose, tightens wordy sentences, fixes transitions |
 
-Each stage is a **node in a LangGraph `StateGraph`**, communicating through a shared `BlogState` dictionary.
+Each stage is a **node in a LangGraph `StateGraph`**, communicating through a
+shared `BlogState` dictionary.
 
 ---
 
 ## Why multi-agent?
 
-A single LLM call asking for "a blog post about X" tends to produce generic, unstructured output. Splitting the task into narrow roles gives each stage a tight, well-defined brief — which produces significantly better results.
+A single LLM prompt like *"write a blog post about X"* produces generic,
+unstructured output. Splitting the task into narrow roles gives each stage a
+tight, well-defined brief — which produces significantly better results.
 
-Two design principles used here:
+Two design principles:
 
-- **Each node returns only what it changed.** LangGraph merges the partial update into the shared state. The researcher returns `{"research": text}`, not the whole state.
-- **The editor's brief is deliberately narrow.** It polishes — it does not rewrite. Without that constraint, LLMs tend to discard the writer's work and introduce factual drift.
+- **Each node returns only what it changed.** LangGraph merges the partial update
+  into the shared state. The researcher returns `{"research": text}`, not the
+  whole state.
+- **The editor's brief is deliberately narrow.** It polishes — it does not
+  rewrite. Without that constraint, LLMs tend to discard the writer's work and
+  introduce factual drift.
 
 ---
 
@@ -40,9 +54,10 @@ Two design principles used here:
 |---|---|
 | Orchestration | [LangGraph](https://github.com/langchain-ai/langgraph) |
 | LLM framework | [LangChain](https://github.com/langchain-ai/langchain) |
-| Model | Google Gemini (`gemini-3-flash-preview`) |
-| UI + hosting | [Streamlit Community Cloud](https://streamlit.io/cloud) |
-| Secrets | `.env` locally · Streamlit secrets in production |
+| Model | Google Gemini (`gemini-2.5-flash`) |
+| Backend | FastAPI + Uvicorn |
+| Frontend | Vanilla HTML / CSS / JS |
+| Deployment | Render (backend) + GitHub Pages (frontend) |
 
 ---
 
@@ -50,10 +65,21 @@ Two design principles used here:
 
 ```
 .
-├── agent.py               CLI version (run from the terminal)
-├── streamlit_app.py       Streamlit web app (with password gate)
-├── requirements.txt
-├── .env                   Local only — never commit
+├── .github/
+│   └── workflows/
+│       └── pages.yml          GitHub Pages deploy workflow
+├── backend/
+│   ├── agent.py               LangGraph pipeline (4 nodes)
+│   ├── main.py                FastAPI wrapper
+│   ├── requirements.txt
+│   └── .env                   Local only — never committed
+├── frontend/
+│   ├── index.html
+│   ├── style.css
+│   └── script.js
+├── docs/
+│   └── screenshot.png
+├── render.yaml                Render deployment config
 └── README.md
 ```
 
@@ -65,130 +91,88 @@ Two design principles used here:
 
 ```bash
 git clone https://github.com/Aideejames/blog-writer-agent.git
-cd blog-writer-agent
+cd blog-writer-agent/backend
 pip install -r requirements.txt
 ```
 
 ### 2. Add your API key
 
-Create a `.env` file in the project root:
+Create `backend/.env`:
 
 ```env
 GOOGLE_API_KEY=your-gemini-api-key-here
-GEMINI_MODEL=gemini-3-flash-preview
+GEMINI_MODEL=gemini-2.5-flash
+DEMO_PASSWORD=changeme      # optional — remove or leave blank for open access
 ```
 
 Get a free Gemini API key at https://aistudio.google.com/app/apikey.
 
-### 3a. Run the CLI version
+### 3. Start the API
 
 ```bash
-python agent.py
+python -m uvicorn main:app --reload
 ```
 
-It will prompt:
+API docs at **http://127.0.0.1:8000/docs**
 
-```
-Enter a blog topic:
-```
+### 4. Open the frontend
 
-Type your topic, press Enter, wait ~30–60 seconds, and the final post is printed.
+Open `frontend/index.html` in a browser. It calls the local API.
 
-### 3b. Run the Streamlit version
+---
+
+## API
+
+Deployed at: **https://blog-writer-agent-api.onrender.com**
+
+### Interactive docs
+
+👉 https://blog-writer-agent-api.onrender.com/docs
+
+### Example call
 
 ```bash
-streamlit run streamlit_app.py
+curl -X POST https://blog-writer-agent-api.onrender.com/generate \
+  -H "Content-Type: application/json" \
+  -H "x-demo-password: your-password" \
+  -d '{ "topic": "Why sleep matters for developers" }'
 ```
 
-Open http://localhost:8501 in your browser.
+### Response
 
-> If you don't set a `password` secret locally, the password gate will fail. See "Deploying" below for how to add it.
-
----
-
-## Deploying to Streamlit Community Cloud
-
-1. Push the repo to GitHub.
-2. Go to https://share.streamlit.io → **New app** → pick the repo.
-3. Main file path: `streamlit_app.py`.
-4. Click **Advanced settings** → **Secrets** → paste:
-
-   ```toml
-   GOOGLE_API_KEY = "your-gemini-api-key-here"
-   GEMINI_MODEL = "gemini-3-flash-preview"
-   password = "your-chosen-demo-password"
-   ```
-
-5. Click **Deploy**.
-
-The password gate reads `st.secrets["password"]`, so only people you share the password with can run the app — protecting your API quota.
-
----
-
-## How the password gate works
-
-```python
-def password_entered():
-    if hmac.compare_digest(
-        st.session_state.get("password", ""),
-        st.secrets["password"],
-    ):
-        st.session_state["password_correct"] = True
-        del st.session_state["password"]
+```json
+{
+  "topic": "Why sleep matters for developers",
+  "research": "...",
+  "outline": "...",
+  "draft": "...",
+  "final_post": "..."
+}
 ```
 
-- Uses `hmac.compare_digest` for **constant-time comparison** — prevents timing-based password guessing.
-- The password lives in Streamlit secrets, **never in source code**.
-- Once entered, `password_correct` is stored in session state — the user isn't asked again for the same session.
+### Endpoints
+
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/` | API greeting + model name |
+| `GET` | `/health` | Health check |
+| `POST` | `/generate` | Run the 4-agent pipeline for a topic |
 
 ---
 
-## Design notes
+## Deployment
 
-### Why not just one big prompt?
+### Backend (Render)
 
-| Approach | Result |
-|---|---|
-| Single prompt: "Write a blog post about X" | Generic, unstructured, hard to iterate |
-| **Multi-agent pipeline** | Better research, tighter structure, cleaner prose |
+1. Push to GitHub
+2. Render → **New +** → **Blueprint** → connect the repo
+3. Add environment variables: `GOOGLE_API_KEY`, `DEMO_PASSWORD`, `GEMINI_MODEL`
+4. Deploy
 
-Each node is easier to debug, evaluate, and replace. Want a different writing style? Change only the `writer` prompt. Want fact-checking? Add a node between `researcher` and `outliner`.
+### Frontend (GitHub Pages)
 
-### Why LangGraph (not plain function calls)?
-
-- **One call runs the whole pipeline:** `blog_agent.invoke({"topic": ...})`
-- Easy to add **loops, conditionals, parallel branches** later
-- **Cleaner code** as the agent grows — nodes and edges are declarative
-- Modern API: uses `StateGraph`, `START`, `END` — not the deprecated `set_entry_point()` / `set_finish_point()`
-
-### Why check `isinstance(text, list)`?
-
-Gemini sometimes returns content as a **list of parts** (text + signature + extras). The helper normalises it to a plain string so downstream nodes always receive a clean input.
-
----
-
-## Possible enhancements
-
-- **Real-time research** — add a Tavily or SerpAPI node before the outliner
-- **Fact-checking node** — verify claims against sources before publishing
-- **SEO optimisation** — add meta description, keywords, slug
-- **Multi-language output** — detect or accept target language
-- **Streaming UI** — stream tokens to the browser as each stage completes
-- **History** — save generated posts to a database for review
-
----
-
-## Requirements
-
-```
-streamlit
-langchain
-langchain-google-genai
-langgraph
-python-dotenv
-```
-
-Python 3.10+ recommended.
+1. Settings → Pages → Source: **GitHub Actions**
+2. The `.github/workflows/pages.yml` workflow deploys `frontend/` automatically on every push to `main`
 
 ---
 
