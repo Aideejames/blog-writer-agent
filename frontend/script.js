@@ -1,5 +1,5 @@
 // Change to your Render URL after deploying
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = "https://blog-writer-agent-api.onrender.com";
 
 const form = document.getElementById("generate-form");
 const submitBtn = document.getElementById("submit-btn");
