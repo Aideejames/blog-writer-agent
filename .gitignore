@@ -1,7 +1,24 @@
-.env
-.streamlit/secrets.toml
-.venv/
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Environment — NEVER commit
+.env
+.env.local
+
+# PyCharm
 .idea/
-~$*.docx
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docs (optional — remove this line if you want to commit the .docx)
+# docs/
+
+# VS Code
+.vscode/

@@ -119,24 +119,30 @@ Output ONLY the polished blog post."""
     if isinstance(text, list):
         text = "".join(part.get("text", "") for part in text if isinstance(part, dict))
     return {"final_post": text}
-
 # 8. Build the graph
-graph_builder = StateGraph(BlogState)
+def build_agent():
+    """Build and compile the LangGraph blog-writing pipeline."""
+    graph_builder = StateGraph(BlogState)
 
-graph_builder.add_node("researcher", researcher)
-graph_builder.add_node("outliner", outliner)
-graph_builder.add_node("writer", writer)
-graph_builder.add_node("editor", editor)
+    graph_builder.add_node("researcher", researcher)
+    graph_builder.add_node("outliner", outliner)
+    graph_builder.add_node("writer", writer)
+    graph_builder.add_node("editor", editor)
 
-graph_builder.add_edge(START, "researcher")
-graph_builder.add_edge("researcher", "outliner")
-graph_builder.add_edge("outliner", "writer")
-graph_builder.add_edge("writer", "editor")
-graph_builder.add_edge("editor", END)
+    graph_builder.add_edge(START, "researcher")
+    graph_builder.add_edge("researcher", "outliner")
+    graph_builder.add_edge("outliner", "writer")
+    graph_builder.add_edge("writer", "editor")
+    graph_builder.add_edge("editor", END)
 
-blog_agent = graph_builder.compile()
+    return graph_builder.compile()
 
-# 9. Run it
+
+# Compile once at import time so FastAPI can reuse the same instance
+blog_agent = build_agent()
+
+
+# 9. CLI entrypoint (only runs when you execute `python agent.py` directly)
 if __name__ == "__main__":
     topic = input("Enter a blog topic: ").strip()
     if not topic:

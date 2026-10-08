@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blog Writer Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- ── Top bar ────────────────────────────────────────── -->
+  <nav class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#">
+        <span class="brand-mark">✱</span>
+        <span class="brand-name">Blog Writer Agent</span>
+      </a>
+      <span class="topbar-meta">LangGraph · Gemini</span>
+    </div>
+  </nav>
+
+  <!-- ── Hero ───────────────────────────────────────────── -->
+  <header class="hero">
+    <p class="eyebrow">Multi-agent pipeline</p>
+    <h1 class="hero-title">
+      One topic.<br />
+      Four agents.<br />
+      <em>A finished essay.</em>
+    </h1>
+    <p class="hero-sub">
+      Research → Outline → Write → Edit. Each stage is a LangGraph node,
+      powered by Gemini. Enter a topic below and watch it work.
+    </p>
+  </header>
+
+  <!-- ── Form ───────────────────────────────────────────── -->
+  <main class="container">
+    <form id="generate-form" class="composer">
+      <div class="field">
+        <label for="topic">Topic</label>
+        <input
+          id="topic"
+          name="topic"
+          type="text"
+          placeholder="e.g. Why sleep matters for developers"
+          value="Why sleep matters for developers"
+          required
+          minlength="2"
+          maxlength="200"
+          autocomplete="off"
+          spellcheck="false"
+        />
+      </div>
+
+      <div class="field field-inline">
+        <label for="password">Password <span class="opt">(optional)</span></label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          placeholder="leave blank if none"
+          autocomplete="off"
+        />
+      </div>
+
+      <button type="submit" id="submit-btn" class="btn-primary">
+        <span class="btn-label">Generate essay</span>
+        <span class="btn-arrow">→</span>
+      </button>
+    </form>
+
+    <!-- ── Status ───────────────────────────────────────── -->
+    <section id="status" class="status hidden" aria-live="polite">
+      <div class="status-dots">
+        <span></span><span></span><span></span>
+      </div>
+      <p class="status-text">
+        Running the pipeline — research → outline → write → edit.
+        <br />
+        <small>This usually takes 30–60 seconds.</small>
+      </p>
+    </section>
+
+    <!-- ── Result ───────────────────────────────────────── -->
+    <section id="result" class="result hidden">
+      <div class="result-head">
+        <p class="eyebrow">Final essay</p>
+        <h2 id="post-title" class="result-title"></h2>
+        <div class="result-rule"></div>
+      </div>
+
+      <article id="post-body" class="post-body"></article>
+
+      <details class="steps">
+        <summary>
+          <span class="steps-icon">＋</span>
+          Show intermediate steps
+        </summary>
+        <div class="steps-body">
+          <div class="step">
+            <h3>1 · Research</h3>
+            <pre id="research"></pre>
+          </div>
+          <div class="step">
+            <h3>2 · Outline</h3>
+            <pre id="outline"></pre>
+          </div>
+          <div class="step">
+            <h3>3 · Draft</h3>
+            <pre id="draft"></pre>
+          </div>
+        </div>
+      </details>
+    </section>
+  </main>
+
+  <!-- ── Footer ─────────────────────────────────────────── -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <span>Built with FastAPI · LangGraph · Gemini</span>
+      <span>
+        <a href="https://github.com/Aideejames" target="_blank" rel="noopener">
+          GitHub
+        </a>
+      </span>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
